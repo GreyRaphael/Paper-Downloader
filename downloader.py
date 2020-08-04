@@ -48,15 +48,18 @@ if __name__ == "__main__":
     hub=scihub.SciHub()
     
     volume_issue_urls=get_volume_issue_urls(start_year, end_year)
+    # volume_issue_urls=get_volume_issue_urls(1959, 1960)
+    file=open(f'paper_urls.csv','w', encoding='utf8')
     for url in volume_issue_urls:
         year=volume_issue_urls[url]
         volume, issue= re.findall(r'\d+', url)
         path=f'{year}/{volume}-{issue}'
         os.makedirs(path, exist_ok=True)
         paper_urls=get_paper_urls(url)
-        for pl, title in paper_urls:
+        for i, (pl, title) in enumerate(paper_urls):
             print(pl, title)
-            filename=f'{path}/{title}.pdf'
+            file.write(f'{pl},{title}\n')
+            filename=f'{path}/{i+1}-{pl[50:]}.pdf'
             hub.download(pl, path=filename)
         print(f'----->finished {path}')
 
