@@ -50,8 +50,8 @@ class SciHub(object):
         # res = requests.get('https://sci-hub.now.sh/')
         # s = self._get_soup(res.content)
         # for a in s.find_all('a', href=True):
-        #    if 'sci-hub.' in a['href']:
-        #       urls.append(a['href'])
+        #     if 'sci-hub.' in a['href']:
+        #         urls.append(a['href'])
         return ['https://sci-hub.tw/',]
 
     def set_proxy(self, proxy):
