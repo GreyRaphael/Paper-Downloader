@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+import json
 import requests
 from lxml import etree
 import random
@@ -13,54 +14,85 @@ HEADERS={
 }
 
 def get_volume_issue_urls(start_year, end_year):
-    # step1: get all volume-issue urls
-    level1_urls={}
+    '''get volume-issues of every year'''
+    all_vi_urls={}
     for year in range(start_year, end_year+1):
         os.makedirs(str(year), exist_ok=True)
         url=f'https://www.sciencedirect.com/journal/00223115/year/{year}/issues'
         j_urls=requests.get(url, headers=HEADERS).json()
-        for url in j_urls['data']:
-            level1_urls[f"https://www.sciencedirect.com/journal/journal-of-nuclear-materials{url['uriLookup']}"]=year
-    return level1_urls
+        all_vi_urls[year]=[f"https://www.sciencedirect.com/journal/journal-of-nuclear-materials{url['uriLookup']}" for url in j_urls['data']]
+    
+    print('Success to get all volume-issue urls')
+    return all_vi_urls
 
-def get_paper_urls(volume_issue_url):
-    # step2: get all paper  urls
-    pg=requests.get(volume_issue_url, headers=HEADERS).text
-    tree=etree.HTML(pg)
-    raw_urls = tree.xpath("//a[contains(@class, 'article-content-title')]/@href")
-    raw_titles=tree.xpath("//a[contains(@class, 'article-content-title')]/span")
-    # processing urls
-    final_urls= [f'https://www.sciencedirect.com{url}' for url in raw_urls]
-    # processing title
-    entire_titles=[title.xpath('string(.)') for title in raw_titles]
-    final_titles=[' '.join(re.findall(r'\w+', str(title))) for title in entire_titles]
-    return zip(final_urls, final_titles)
+def get_all_paper_urls(all_vi_urls):
+    all_paper_urls=[]
+    for year in all_vi_urls:
+        for vi_url in all_vi_urls[year]:
+            vi_page=requests.get(vi_url, headers=HEADERS).text
+            tree=etree.HTML(vi_page)
+            raw_urls = tree.xpath("//a[contains(@class, 'article-content-title')]/@href")
+            raw_titles=tree.xpath("//a[contains(@class, 'article-content-title')]/span")
+            assert len(raw_urls)==len(raw_titles), f'raw urls length != raw titles: {vi_url}'
+
+            vi=re.findall(r'\d+', vi_url)
+            if len(vi)==2:
+                volume, issue=vi
+            elif len(vi)==1:
+                volume, issue = vi[0], 0
+            else:
+                raise ValueError(f'vi length must be 1 or 2: {vi_url}')
+            path=f'{year}/volume{volume}-issue{issue}'
+            os.makedirs(path, exist_ok=True)
+
+
+            for raw_url, title in zip(raw_urls, raw_titles):
+                final_url=f'https://www.sciencedirect.com{raw_url}'
+                final_title=title.xpath('string(.)')
+                all_paper_urls.append((final_url, final_title, year, volume, issue))
+    print('Success to get all paper urls')
+    return all_paper_urls
+
+def save2csv(all_paper_urls, start_year, end_year):
+    with open(f'all_paper_urls_{start_year}_{end_year}.csv', 'w', encoding='utf8') as file:
+        for url, title, year, volume, issue in all_paper_urls:
+            file.write(f'{url}\t{title}\t{year}\t{volume}\t{issue}\n')
+
+def load_finished(start_year, end_year):
+    filename = f'finished_papers_{start_year}_{end_year}.csv'
+    finished_papers=[]
+    if os.path.exists(filename):
+        for url_line in open(filename, 'r', encoding='utf8'):
+            finished_papers.append(url_line[:-1])
+    return finished_papers
+
+def save_finished(start_year, end_year, url):
+    with open(f'finished_papers_{start_year}_{end_year}.csv', 'a', encoding='utf8') as file:
+        file.write(f'{url}\n')
 
 
 if __name__ == "__main__":
     if len(sys.argv)<3:
         print('usage: python downloader.py 1959 1960')
         sys.exit()
-    
+
     start_year=int(sys.argv[1])
     end_year=int(sys.argv[2])
 
     hub=scihub.SciHub()
-    
-    volume_issue_urls=get_volume_issue_urls(start_year, end_year)
-    # volume_issue_urls=get_volume_issue_urls(1959, 1960)
-    file=open(f'paper_urls.csv','w', encoding='utf8')
-    for url in volume_issue_urls:
-        year=volume_issue_urls[url]
-        volume, issue= re.findall(r'\d+', url)
-        path=f'{year}/{volume}-{issue}'
-        os.makedirs(path, exist_ok=True)
-        paper_urls=get_paper_urls(url)
-        for i, (pl, title) in enumerate(paper_urls):
-            print(pl, title)
-            file.write(f'{pl},{title}\n')
-            filename=f'{path}/{i+1}-{pl[50:]}.pdf'
-            hub.download(pl, path=filename)
-        print(f'----->finished {path}')
+    all_vi_urls=get_volume_issue_urls(start_year, end_year)
+    all_paper_urls=get_all_paper_urls(all_vi_urls)
+    finished_papers=load_finished(start_year, end_year)
 
-    
+    # print(finished_papers)
+
+    for url, title, year, volume, issue in all_paper_urls:
+        filename=f'{year}/volume{volume}-issue{issue}/{url[50:]}.pdf'
+        if url not in finished_papers:
+            hub.download(url, path=filename)
+            save_finished(start_year, end_year, url)
+        print(f'finished--->{url}, {title}')
+    print(f'finishe all paper from {start_year} to {end_year}')
+
+
+
