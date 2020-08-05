@@ -53,23 +53,6 @@ def get_all_paper_urls(all_vi_urls):
     print('Success to get all paper urls')
     return all_paper_urls
 
-def save2csv(all_paper_urls, start_year, end_year):
-    with open(f'all_paper_urls_{start_year}_{end_year}.csv', 'w', encoding='utf8') as file:
-        for url, title, year, volume, issue in all_paper_urls:
-            file.write(f'{url}\t{title}\t{year}\t{volume}\t{issue}\n')
-
-def load_finished(start_year, end_year):
-    filename = f'finished_papers_{start_year}_{end_year}.csv'
-    finished_papers=[]
-    if os.path.exists(filename):
-        for url_line in open(filename, 'r', encoding='utf8'):
-            finished_papers.append(url_line[:-1])
-    return finished_papers
-
-def save_finished(start_year, end_year, url):
-    with open(f'finished_papers_{start_year}_{end_year}.csv', 'a', encoding='utf8') as file:
-        file.write(f'{url}\n')
-
 
 if __name__ == "__main__":
     if len(sys.argv)<3:
@@ -82,15 +65,11 @@ if __name__ == "__main__":
     hub=scihub.SciHub()
     all_vi_urls=get_volume_issue_urls(start_year, end_year)
     all_paper_urls=get_all_paper_urls(all_vi_urls)
-    finished_papers=load_finished(start_year, end_year)
-
-    # print(finished_papers)
 
     for url, title, year, volume, issue in all_paper_urls:
         filename=f'{year}/volume{volume}-issue{issue}/{url[50:]}.pdf'
-        if url not in finished_papers:
+        if not os.path.exists(filename):
             hub.download(url, path=filename)
-            save_finished(start_year, end_year, url)
         print(f'finished--->{url}, {title}')
     print(f'finishe all paper from {start_year} to {end_year}')
 
