@@ -48,9 +48,10 @@ class SciHub():
     def download(self, paper_url, path):
         pdf_url=self._get_pdf_url(paper_url, path)
         try:
-            pdf=self.sess.get(pdf_url, headers=random_headers()).content
-            with open(path, 'wb') as file:
-                file.write(pdf)
+            if pdf_url:
+                pdf=self.sess.get(pdf_url, headers=random_headers()).content
+                with open(path, 'wb') as file:
+                    file.write(pdf)
         except FileNotFoundError as e:
             print(f'本地无法保存文件{path}', e, paper_url, path)
         except Exception as e:
