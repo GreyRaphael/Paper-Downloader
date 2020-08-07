@@ -27,6 +27,7 @@ class SciHub():
     def __init__(self):
         self.sess=requests.session()
         self.pat=re.compile(r"location.href=\'(.+?)\'")
+        self.unfinished=[]
     
     def _get_pdf_url(self, paper_url, path):
         pg=''
@@ -44,6 +45,7 @@ class SciHub():
                 return pdf_url
             else:
                 print(f'{"="*50}>[网络问题]存在验证码，下次重启再试', paper_url, path)
+                self.unfinished.append((paper_url, path))
     
     def download(self, paper_url, path):
         pdf_url=self._get_pdf_url(paper_url, path)
@@ -56,6 +58,12 @@ class SciHub():
             print(f'[本地问题]本地无法保存文件{path}', e, paper_url, path)
         except Exception as e:
             print(f'{"="*50}>[网络问题]无法下载pdf，下次重启再试', e, paper_url, path)
+            self.unfinished.append((paper_url, path))
+
+    def save_finished(self):
+        with open('unfinished.csv', 'w') as file:
+            for paper_url, path in self.unfinished:
+                file.write(f'{paper_url}\t{path}\n')
 
 def get_volume_issue_urls(start_year, end_year):
     '''get volume-issues of every year'''
@@ -116,6 +124,7 @@ if __name__ == "__main__":
             hub.download(url, path=filename)
         print(f'finished--->{url}, {title[:60]}')
     print(f'finishe all paper from {start_year} to {end_year}')
+    hub.save_finished()
 
 
 
