@@ -28,6 +28,8 @@ class SciHub():
         self.sess=requests.session()
         self.pat=re.compile(r"location.href=\'(.+?)\'")
         self.unfinished=[]
+        if os.path.exists('unfinished.csv'):
+            os.remove('unfinished.csv')
     
     def _get_pdf_url(self, paper_url, path):
         pg=''
@@ -35,6 +37,7 @@ class SciHub():
             pg=self.sess.get(f'https://sci-hub.tw/{paper_url}', headers=random_headers()).text
         except Exception as e:
             print(f'{"="*50}>[网络问题]无法访问sci-hub.tw，下次重启再试', e, paper_url, path)
+            self.unfinished.append((paper_url, path))
         
         if pg:
             match=self.pat.search(pg)
@@ -56,14 +59,17 @@ class SciHub():
                     file.write(pdf)
         except FileNotFoundError as e:
             print(f'[本地问题]本地无法保存文件{path}', e, paper_url, path)
+            self.unfinished.append((paper_url, path))
         except Exception as e:
             print(f'{"="*50}>[网络问题]无法下载pdf，下次重启再试', e, paper_url, path)
             self.unfinished.append((paper_url, path))
 
     def save_finished(self):
-        with open('unfinished.csv', 'w') as file:
+        if self.unfinished:
+            file=open('unfinished.csv', 'w')
             for paper_url, path in self.unfinished:
                 file.write(f'{paper_url}\t{path}\n')
+                
 
 def get_volume_issue_urls(start_year, end_year):
     '''get volume-issues of every year'''
