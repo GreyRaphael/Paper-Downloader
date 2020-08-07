@@ -33,7 +33,7 @@ class SciHub():
         try:
             pg=self.sess.get(f'https://sci-hub.tw/{paper_url}', headers=random_headers()).text
         except Exception as e:
-            print('[网络问题]无法访问sci-hub.tw，下次重启再试', e, paper_url, path)
+            print(f'{"="*50}>[网络问题]无法访问sci-hub.tw，下次重启再试', e, paper_url, path)
         
         if pg:
             match=self.pat.search(pg)
@@ -43,7 +43,7 @@ class SciHub():
                     pdf_url=f'https:{pdf_url}'
                 return pdf_url
             else:
-                print('[网络问题]存在验证码，下次重启再试', paper_url, path)
+                print(f'{"="*50}>[网络问题]存在验证码，下次重启再试', paper_url, path)
     
     def download(self, paper_url, path):
         pdf_url=self._get_pdf_url(paper_url, path)
@@ -53,9 +53,9 @@ class SciHub():
                 with open(path, 'wb') as file:
                     file.write(pdf)
         except FileNotFoundError as e:
-            print(f'本地无法保存文件{path}', e, paper_url, path)
+            print(f'[本地问题]本地无法保存文件{path}', e, paper_url, path)
         except Exception as e:
-            print('[网络问题]无法下载pdf，下次重启再试', e, paper_url, path)
+            print(f'{"="*50}>[网络问题]无法下载pdf，下次重启再试', e, paper_url, path)
 
 def get_volume_issue_urls(start_year, end_year):
     '''get volume-issues of every year'''
