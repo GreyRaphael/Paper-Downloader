@@ -65,12 +65,10 @@ class SciHub():
             self.unfinished.append((paper_url, path))
 
     def save_finished(self):
-        if self.unfinished:
-            print('[INFO]未完成的保存到本地文件unfinished.csv, 以便手动下载')
-            file=open('unfinished.csv', 'w')
-            for paper_url, path in self.unfinished:
-                file.write(f'{paper_url}\t{path}\n')
-                
+        file=open('unfinished.csv', 'w')
+        for paper_url, path in self.unfinished:
+            file.write(f'{paper_url}\t{path}\n')
+
 
 def get_volume_issue_urls(start_year, end_year):
     '''get volume-issues of every year'''
@@ -132,6 +130,12 @@ if __name__ == "__main__":
         print(f'finished--->{url}, {title[:60]}')
     print(f'finishe all paper from {start_year} to {end_year}')
     hub.save_finished()
+
+    if hub.unfinished:
+        print('[INFO]未完成的保存到本地文件unfinished.csv, 以便手动下载')
+        hub.save_finished()
+    else:
+        print(f'成功下载所有{start_yeaer}到{end_year}的JNM文章')
 
 
 
