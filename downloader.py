@@ -134,7 +134,7 @@ if __name__ == "__main__":
         print(f'finished--->{url}, {title[:60]}')
 
     if hub.unfinished:
-        print('[INFO]未完成的保存到本地文件unfinished.csv, 以便手动下载')
+        print(f'未完成{len(hub.unfinished)}篇文章网址保存到本地文件unfinished.csv, 以便手动下载')
         hub.save_finished()
     else:
         print(f'成功下载所有{start_year}到{end_year}的JNM文章')
