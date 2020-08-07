@@ -55,8 +55,12 @@ class SciHub():
         try:
             if pdf_url:
                 pdf=self.sess.get(pdf_url, headers=random_headers()).content
-                with open(path, 'wb') as file:
-                    file.write(pdf)
+                if pdf:
+                    with open(path, 'wb') as file:
+                        file.write(pdf)
+                else:
+                    print('[网络问题]pdf为空，下次重启再试', paper_url, path)
+                    self.unfinished.append((paper_url, path))
         except FileNotFoundError as e:
             print(f'[本地问题]本地无法保存文件{path}', e, paper_url, path)
             self.unfinished.append((paper_url, path))
