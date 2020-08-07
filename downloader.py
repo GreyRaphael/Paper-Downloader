@@ -66,6 +66,7 @@ class SciHub():
 
     def save_finished(self):
         if self.unfinished:
+            print('[INFO]未完成的保存到本地文件unfinished.csv, 以便手动下载')
             file=open('unfinished.csv', 'w')
             for paper_url, path in self.unfinished:
                 file.write(f'{paper_url}\t{path}\n')
