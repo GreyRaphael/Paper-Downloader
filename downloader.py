@@ -128,14 +128,12 @@ if __name__ == "__main__":
         if not os.path.exists(filename):
             hub.download(url, path=filename)
         print(f'finished--->{url}, {title[:60]}')
-    print(f'finishe all paper from {start_year} to {end_year}')
-    hub.save_finished()
 
     if hub.unfinished:
         print('[INFO]未完成的保存到本地文件unfinished.csv, 以便手动下载')
         hub.save_finished()
     else:
-        print(f'成功下载所有{start_yeaer}到{end_year}的JNM文章')
+        print(f'成功下载所有{start_year}到{end_year}的JNM文章')
 
 
 
