@@ -6,6 +6,10 @@ import requests
 from lxml import etree
 import random
 
+G_PROXY={}
+if os.path.exists('proxy.json'):
+    G_PROXY=json.load(open('proxy.json'))
+
 def random_headers():
     version=random.randint(70, 83)
     HEADERS={
@@ -34,7 +38,7 @@ class SciHub():
     def _get_pdf_url(self, paper_url, path):
         pg=''
         try:
-            pg=self.sess.get(f'https://sci-hub.tw/{paper_url}', headers=random_headers()).text
+            pg=self.sess.get(f'https://sci-hub.tw/{paper_url}', headers=random_headers(), proxies=G_PROXY).text
         except Exception as e:
             print(f'{"="*50}>[网络问题]无法访问sci-hub.tw，下次重启再试', e, paper_url, path)
             self.unfinished.append((paper_url, path))
@@ -54,7 +58,7 @@ class SciHub():
         pdf_url=self._get_pdf_url(paper_url, path)
         try:
             if pdf_url:
-                pdf=self.sess.get(pdf_url, headers=random_headers()).content
+                pdf=self.sess.get(pdf_url, headers=random_headers(), proxies=G_PROXY).content
                 if pdf:
                     with open(path, 'wb') as file:
                         file.write(pdf)
@@ -80,7 +84,7 @@ def get_volume_issue_urls(start_year, end_year):
     for year in range(start_year, end_year+1):
         os.makedirs(str(year), exist_ok=True)
         url=f'https://www.sciencedirect.com/journal/00223115/year/{year}/issues'
-        j_urls=requests.get(url, headers=random_headers()).json()
+        j_urls=requests.get(url, headers=random_headers(), proxies=G_PROXY).json()
         all_vi_urls[year]=[f"https://www.sciencedirect.com/journal/journal-of-nuclear-materials{url['uriLookup']}" for url in j_urls['data']]
     
     print('Success to get all volume-issue urls')
@@ -90,7 +94,7 @@ def get_all_paper_urls(all_vi_urls):
     all_paper_urls=[]
     for year in all_vi_urls:
         for vi_url in all_vi_urls[year]:
-            vi_page=requests.get(vi_url, headers=random_headers()).text
+            vi_page=requests.get(vi_url, headers=random_headers(), proxies=G_PROXY).text
             tree=etree.HTML(vi_page)
             raw_urls = tree.xpath("//a[contains(@class, 'article-content-title')]/@href")
             raw_titles=tree.xpath("//a[contains(@class, 'article-content-title')]/span")
