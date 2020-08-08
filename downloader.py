@@ -66,7 +66,7 @@ class SciHub():
                     print('[网络问题]pdf为空，下次重启再试', paper_url, path)
                     self.unfinished.append((paper_url, path))
         except FileNotFoundError as e:
-            print(f'[本地问题]本地无法保存文件{path}', e, paper_url, path)
+            print(f'[本地问题]本地无法保存文件{path}', e, paper_url)
             self.unfinished.append((paper_url, path))
         except Exception as e:
             print('[网络问题]无法下载pdf，下次重启再试', e, paper_url, path)
@@ -132,10 +132,10 @@ if __name__ == "__main__":
     all_paper_urls=get_all_paper_urls(all_vi_urls)
 
     for url, title, year, volume, issue in all_paper_urls:
-        filename=f'{year}/volume{volume}-issue{issue}/{url[50:]}.pdf'
+        filename=f'{year}/volume{volume}-issue{issue}/{url[54:]}.pdf'
         if not os.path.exists(filename):
             hub.download(url, path=filename)
-        print(f'finished--->{url}, {title[:30]}, {year}-{volume}-{issue}')
+        print(f'finished--->{url[8:]}, {title[:30]}, {year}-{volume}-{issue}')
 
     if hub.unfinished:
         print(f'未完成{len(hub.unfinished)}篇文章网址保存到本地文件unfinished.csv, 以便手动下载')
