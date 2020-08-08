@@ -40,7 +40,7 @@ class SciHub():
         try:
             pg=self.sess.get(f'https://sci-hub.tw/{paper_url}', headers=random_headers(), proxies=G_PROXY).text
         except Exception as e:
-            print(f'{"="*50}>[网络问题]无法访问sci-hub.tw，下次重启再试', e, paper_url, path)
+            print('[网络问题]无法访问sci-hub.tw，下次重启再试', e, paper_url, path)
             self.unfinished.append((paper_url, path))
         
         if pg:
@@ -51,7 +51,7 @@ class SciHub():
                     pdf_url=f'https:{pdf_url}'
                 return pdf_url
             else:
-                print(f'{"="*50}>[网络问题]存在验证码，下次重启再试', paper_url, path)
+                print('[网络问题]存在验证码，下次重启再试', paper_url, path)
                 self.unfinished.append((paper_url, path))
     
     def download(self, paper_url, path):
@@ -69,7 +69,7 @@ class SciHub():
             print(f'[本地问题]本地无法保存文件{path}', e, paper_url, path)
             self.unfinished.append((paper_url, path))
         except Exception as e:
-            print(f'{"="*50}>[网络问题]无法下载pdf，下次重启再试', e, paper_url, path)
+            print('[网络问题]无法下载pdf，下次重启再试', e, paper_url, path)
             self.unfinished.append((paper_url, path))
 
     def save_finished(self):
@@ -112,7 +112,7 @@ def get_all_paper_urls(all_vi_urls):
 
 
             for raw_url, title in zip(raw_urls, raw_titles):
-                final_url=f'https://www.sciencedirect.com{raw_url}'
+                final_url=f'https://www.sciencedirect.com/science/article/abs/pii/{raw_url[50:]}'
                 final_title=title.xpath('string(.)')
                 all_paper_urls.append((final_url, final_title, year, volume, issue))
     print('Success to get all paper urls')
@@ -135,7 +135,7 @@ if __name__ == "__main__":
         filename=f'{year}/volume{volume}-issue{issue}/{url[50:]}.pdf'
         if not os.path.exists(filename):
             hub.download(url, path=filename)
-        print(f'finished--->{url}, {title[:60]}')
+        print(f'finished--->{url}, {title[:30]}, {year}-{volume}-{issue}')
 
     if hub.unfinished:
         print(f'未完成{len(hub.unfinished)}篇文章网址保存到本地文件unfinished.csv, 以便手动下载')
