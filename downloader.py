@@ -38,7 +38,7 @@ class SciHub():
     def _get_pdf_url(self, paper_url, path):
         pg=''
         try:
-            pg=self.sess.get(f'https://sci-hub.tw/{paper_url}', headers=random_headers(), proxies=G_PROXY).text
+            pg=self.sess.get(f'https://sci-hub.tw/{paper_url}', headers=random_headers(), proxies=G_PROXY, timeout=30).text
         except Exception as e:
             print('[网络问题]无法访问sci-hub.tw，下次重启再试', e, paper_url, path)
             self.unfinished.append((paper_url, path))
@@ -58,7 +58,7 @@ class SciHub():
         pdf_url=self._get_pdf_url(paper_url, path)
         try:
             if pdf_url:
-                pdf=self.sess.get(pdf_url, headers=random_headers(), proxies=G_PROXY).content
+                pdf=self.sess.get(pdf_url, headers=random_headers(), proxies=G_PROXY, timeout=30).content
                 if pdf:
                     with open(path, 'wb') as file:
                         file.write(pdf)
