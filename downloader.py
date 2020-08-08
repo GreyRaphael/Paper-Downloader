@@ -112,7 +112,7 @@ def get_all_paper_urls(all_vi_urls):
 
 
             for raw_url, title in zip(raw_urls, raw_titles):
-                final_url=f'https://www.sciencedirect.com/science/article/abs/pii/{raw_url[50:]}'
+                final_url=f'https://www.sciencedirect.com/science/article/abs/pii/{raw_url[21:]}'
                 final_title=title.xpath('string(.)')
                 all_paper_urls.append((final_url, final_title, year, volume, issue))
     print('Success to get all paper urls')
