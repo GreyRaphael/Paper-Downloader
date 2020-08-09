@@ -105,8 +105,10 @@ def get_all_paper_urls(all_vi_urls):
                 volume, issue=vi
             elif len(vi)==1:
                 volume, issue = vi[0], 0
+            elif len(vi)==3:
+                volume, issue=vi[0], f'{vi[1]}-S{vi[2]}'
             else:
-                raise ValueError(f'vi length must be 1 or 2: {vi_url}')
+                raise ValueError(f'vi length must be 1, 2, 3: {vi_url}')
             path=f'{year}/volume{volume}-issue{issue}'
             os.makedirs(path, exist_ok=True)
 
