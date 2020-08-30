@@ -90,10 +90,25 @@ def get_volume_issue_urls(start_year, end_year):
     print('Success to get all volume-issue urls')
     return all_vi_urls
 
-def get_all_paper_urls(all_vi_urls):
-    all_paper_urls=[]
+def get_total_vi_urls(all_vi_urls):
     for year in all_vi_urls:
         for vi_url in all_vi_urls[year]:
+            vi_page=requests.get(vi_url, headers=random_headers(), proxies=G_PROXY).text
+            tree=etree.HTML(vi_page)
+
+            pagination=tree.xpath("//span[@class='pagination-pages-label']/text()")
+            if 'page' not in vi_url:
+                if pagination:
+                    total_pages=int(pagination[0][-1])
+                    for pg in range(2, total_pages+1):
+                        new_vi_url=f'{vi_url}?page={pg}'
+                        all_vi_urls[year].append(new_vi_url)
+    return all_vi_urls
+
+def get_all_paper_urls(total_vi_urls):
+    all_paper_urls=[]
+    for year in total_vi_urls:
+        for vi_url in total_vi_urls[year]:
             vi_page=requests.get(vi_url, headers=random_headers(), proxies=G_PROXY).text
             tree=etree.HTML(vi_page)
             raw_urls = tree.xpath("//a[contains(@class, 'article-content-title')]/@href")
@@ -104,7 +119,7 @@ def get_all_paper_urls(all_vi_urls):
             if len(vi)==2:
                 volume, issue=vi
             elif len(vi)==1:
-                volume, issue = vi[0], 0
+                volume, issue = vi[0], 1
             elif len(vi)==3:
                 volume, issue=vi[0], f'{vi[1]}-S{vi[2]}'
             else:
@@ -131,19 +146,20 @@ if __name__ == "__main__":
 
     hub=SciHub()
     all_vi_urls=get_volume_issue_urls(start_year, end_year)
-    all_paper_urls=get_all_paper_urls(all_vi_urls)
+    total_vi_urls=get_total_vi_urls(all_vi_urls)
+    all_paper_urls=get_all_paper_urls(total_vi_urls)
 
-    for url, title, year, volume, issue in all_paper_urls:
-        filename=f'{year}/volume{volume}-issue{issue}/{url[54:]}.pdf'
-        if not os.path.exists(filename):
-            hub.download(url, path=filename)
-        print(f'finished--->{url[8:]}, {title[:30]}, {year}-{volume}-{issue}')
+    # for url, title, year, volume, issue in all_paper_urls:
+    #     filename=f'{year}/volume{volume}-issue{issue}/{url[54:]}.pdf'
+    #     if not os.path.exists(filename):
+    #         hub.download(url, path=filename)
+    #     print(f'finished--->{url[8:]}, {title[:30]}, {year}-{volume}-{issue}')
 
-    if hub.unfinished:
-        print(f'未完成{len(hub.unfinished)}篇文章网址保存到本地文件unfinished.csv, 以便手动下载')
-        hub.save_finished()
-    else:
-        print(f'成功下载所有{start_year}到{end_year}的JNM文章')
+    # if hub.unfinished:
+    #     print(f'未完成{len(hub.unfinished)}篇文章网址保存到本地文件unfinished.csv, 以便手动下载')
+    #     hub.save_finished()
+    # else:
+    #     print(f'成功下载所有{start_year}到{end_year}的JNM文章')
 
 
 
