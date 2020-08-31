@@ -90,31 +90,30 @@ def get_volume_issue_urls(start_year, end_year):
     print('Success to get all volume-issue urls')
     return all_vi_urls
 
-def get_total_vi_urls(all_vi_urls):
-    for year in all_vi_urls:
-        for vi_url in all_vi_urls[year]:
-            vi_page=requests.get(vi_url, headers=random_headers(), proxies=G_PROXY).text
-            tree=etree.HTML(vi_page)
-
-            pagination=tree.xpath("//span[@class='pagination-pages-label']/text()")
-            if 'page' not in vi_url:
-                if pagination:
-                    total_pages=int(pagination[0][-1])
-                    for pg in range(2, total_pages+1):
-                        new_vi_url=f'{vi_url}?page={pg}'
-                        all_vi_urls[year].append(new_vi_url)
-    return all_vi_urls
 
 def get_all_paper_urls(total_vi_urls):
     all_paper_urls=[]
     for year in total_vi_urls:
-        for vi_url in total_vi_urls[year]:
+        while True:
+            if not total_vi_urls[year]:
+                break
+
+            vi_url=total_vi_urls[year].pop()
             vi_page=requests.get(vi_url, headers=random_headers(), proxies=G_PROXY).text
             tree=etree.HTML(vi_page)
+
+            pagination=tree.xpath("//span[@class='pagination-pages-label']/text()")
+            if pagination and 'page' not in vi_url:
+                total_pages=int(pagination[0][-1])
+                for pg in range(2, total_pages+1):
+                    new_vi_url=f'{vi_url}?page={pg}'
+                    all_vi_urls[year].append(new_vi_url)
+
             raw_urls = tree.xpath("//a[contains(@class, 'article-content-title')]/@href")
             raw_titles=tree.xpath("//a[contains(@class, 'article-content-title')]/span")
             assert len(raw_urls)==len(raw_titles), f'raw urls length != raw titles: {vi_url}'
 
+            vi_url=vi_url.split('?')[0] # 将url中的?分开
             vi=re.findall(r'\d+', vi_url)
             if len(vi)==2:
                 volume, issue=vi
@@ -127,11 +126,12 @@ def get_all_paper_urls(total_vi_urls):
             path=f'{year}/volume{volume}-issue{issue}'
             os.makedirs(path, exist_ok=True)
 
-
             for raw_url, title in zip(raw_urls, raw_titles):
                 final_url=f'https://www.sciencedirect.com/science/article/abs/pii/{raw_url[21:]}'
                 final_title=title.xpath('string(.)')
                 all_paper_urls.append((final_url, final_title, year, volume, issue))
+            
+        print(f'Success to get paper urls of {year}')
     print('Success to get all paper urls')
     return all_paper_urls
 
@@ -146,8 +146,7 @@ if __name__ == "__main__":
 
     hub=SciHub()
     all_vi_urls=get_volume_issue_urls(start_year, end_year)
-    total_vi_urls=get_total_vi_urls(all_vi_urls)
-    all_paper_urls=get_all_paper_urls(total_vi_urls)
+    all_paper_urls=get_all_paper_urls(all_vi_urls)
 
     for url, title, year, volume, issue in all_paper_urls:
         filename=f'{year}/volume{volume}-issue{issue}/{url[54:]}.pdf'
