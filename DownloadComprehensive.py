@@ -1,6 +1,13 @@
 import os
 import requests
 
+'''
+下载北大图书馆买的书:
+1. 获取所有链接
+2. 利用Chrome插件Tab copy/paste+IDM下载所有文件
+3. 根据顺序重命名pdf文件
+'''
+
 HEADERS={
 'Host':'www.sciencedirect.com',
 'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0',
